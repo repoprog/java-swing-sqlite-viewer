@@ -3,6 +3,8 @@ package viewer;
 import javax.swing.*;
 
 public class SQLiteViewer extends JFrame {
+    private static JComboBox tablesCombo;
+    private String chosenTable;
 
     public SQLiteViewer() {
         super("SQLite Viewer");
@@ -18,14 +20,53 @@ public class SQLiteViewer extends JFrame {
     }
 
     private void initComponents() {
-        JTextField nameTextField = new JTextField();
-        nameTextField.setName("FileNameTextField");
-        nameTextField.setBounds(50, 20, 400, 30);
-        add(nameTextField);
+        JTextField textField = new JTextField();
+        textField.setName("FileNameTextField");
+        textField.setBounds(50, 20, 480, 30);
+        add(textField);
 
         JButton openButton = new JButton("Open");
         openButton.setName("OpenFileButton");
         openButton.setBounds(550, 20, 100, 30);
         add(openButton);
+
+        tablesCombo = new JComboBox();
+        tablesCombo.setName("TablesComboBox");
+        tablesCombo.setBounds(50, 60, 600, 30);
+        add(tablesCombo);
+
+
+        JTextArea queryArea = new JTextArea();
+        queryArea.setName("QueryTextArea");
+        queryArea.setBounds(50, 100, 470, 80);
+        add(queryArea);
+
+        JButton executeButton = new JButton("Execute");
+        executeButton.setName("ExecuteQueryButton");
+        executeButton.setBounds(530, 100, 120, 35);
+        add(executeButton);
+
+        // ACTIONS
+        // open button
+        openButton.addActionListener(e -> {
+            tablesCombo.removeAllItems();
+            DataBaseManager.setFileName(textField.getText());
+            DataBaseManager.selectTablesNames();
+        });
+        // chose from combo
+        tablesCombo.addActionListener(e -> {
+            chosenTable = (String) tablesCombo.getSelectedItem();
+            queryArea.setText("SELECT * FROM " + chosenTable + ";");
+        });
+        // Execute button
+
+
+    }
+
+    public static void fillCombo() {
+        for (String table : DataBaseManager.getComboElements()) {
+            tablesCombo.addItem(table);
+        }
+
     }
 }
