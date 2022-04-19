@@ -1,65 +1,25 @@
 package viewer;
 
 
+import javax.swing.table.DefaultTableModel;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataBaseManager {
-    private static String fileName; //  = "D:\\database\\test.db";
-    private static List<String> tables;
+    private static String fileName; //  D:\\database\\test.db
+    private static List<String> comboElements;
 
     public static void setFileName(String fileName) {
         DataBaseManager.fileName = fileName;
     }
 
     public static List<String> getComboElements() {
-        return tables;
+        return comboElements;
     }
 
-//    public static void makeConnection() {
-//        String url = "jdbc:sqlite:" + fileName;
-//        String sql = "CREATE TABLE IF NOT EXISTS contacts " +
-//                "(contact_id INTEGER PRIMARY KEY, " +
-//                "first_name TEXT NOT NULL, " +
-//                "last_name TEXT NOT NULL, " +
-//                "email TEXT NOT NULL UNIQUE, " +
-//                "phone TEXT NOT NULL UNIQUE);";
-//        try (Connection con = DriverManager.getConnection(url);
-//             Statement statement = con.createStatement()) {
-//
-//            statement.execute(sql);
-//        } catch (SQLException e) {
-//            System.out.println(e.getMessage());
-//        }
-//        String sql2 = "CREATE TABLE IF NOT EXISTS groups " +
-//                "(group_id INTEGER PRIMARY KEY," +
-//                " name TEXT NOT NULL);";
-//        try (Connection con = DriverManager.getConnection(url);
-//             Statement statement = con.createStatement()) {
-//
-//            statement.execute(sql2);
-//        } catch (SQLException e) {
-//            System.out.println(e.getMessage());
-//        }
-//        String sql3 = "CREATE TABLE IF NOT EXISTS projects " +
-//                "(id integer PRIMARY KEY," +
-//                " name text NOT NULL, " +
-//                "begin_date text," +
-//                " end_date text);";
-//        try (Connection con = DriverManager.getConnection(url);
-//             Statement statement = con.createStatement()) {
-//
-//            statement.execute(sql3);
-//        } catch (SQLException e) {
-//            System.out.println(e.getMessage());
-//        }
-//
-//        selectTablesNames();
-//    }
-
     public static void selectTablesNames() {
-        tables = new ArrayList<>();
+        comboElements = new ArrayList<>();
         String selectTablesSQL = "SELECT name FROM sqlite_master WHERE type = ? AND name NOT LIKE ?";
         try (Connection con = DriverManager.getConnection("jdbc:sqlite:" + fileName);
              PreparedStatement selectTables = con.prepareStatement(selectTablesSQL)) {
@@ -67,16 +27,39 @@ public class DataBaseManager {
             selectTables.setString(2, "sqlite_" + "%");
             ResultSet rs = selectTables.executeQuery();
             while (rs.next()) {
-                tables.add(rs.getString(1));
+                comboElements.add(rs.getString(1));
             }
-            System.out.println(String.join(", ", tables));
+            System.out.println(String.join(", ", comboElements));
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
         SQLiteViewer.fillCombo();
     }
 
-//    public static void selectTable() {
-//
-//    }
+    public static DefaultTableModel fillJTable(String query) {
+        try (Connection con = DriverManager.getConnection("jdbc:sqlite:" + fileName);
+             Statement stat = con.createStatement()) {
+            ResultSet rs = stat.executeQuery(query);
+
+            DefaultTableModel model = new DefaultTableModel();
+            ResultSetMetaData metaData = rs.getMetaData();
+
+            // take table columns names and add them to jTable model
+            for (int i = 0; i < metaData.getColumnCount(); i++) {
+                model.addColumn(metaData.getColumnName(i + 1));
+            }
+            // take table rows and add them to jTable model
+            while (rs.next()) {
+                Object[] row = new Object[rs.getMetaData().getColumnCount()];
+                for (int i = 0; i < row.length; i++) {
+                    row[i] = rs.getObject(i + 1);
+                }
+                model.addRow(row);
+            }
+            return model;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
 }
