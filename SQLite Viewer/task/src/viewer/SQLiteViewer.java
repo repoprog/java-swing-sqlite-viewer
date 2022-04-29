@@ -1,11 +1,12 @@
 package viewer;
 
 import javax.swing.*;
+import java.awt.*;
+import java.io.File;
 
 public class SQLiteViewer extends JFrame {
     private static JComboBox tablesCombo;
     private String chosenTable;
-
     public SQLiteViewer() {
         super("SQLite Viewer");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -35,7 +36,6 @@ public class SQLiteViewer extends JFrame {
         tablesCombo.setBounds(50, 60, 600, 30);
         add(tablesCombo);
 
-
         JTextArea queryArea = new JTextArea();
         queryArea.setName("QueryTextArea");
         queryArea.setBounds(50, 100, 470, 80);
@@ -46,11 +46,18 @@ public class SQLiteViewer extends JFrame {
         executeButton.setBounds(530, 100, 120, 35);
         add(executeButton);
 
+        JTable jTable = new JTable();
+        jTable.setName("Table");
+        JScrollPane jTablePane = new JScrollPane(jTable); //Remember about JScrollPane to set table visible!
+        jTablePane.setBounds(50, 195,600, 300);
+        jTablePane.setVisible(true);
+        add(jTablePane);
+
         // ACTIONS
         // open button
         openButton.addActionListener(e -> {
             tablesCombo.removeAllItems();
-            DataBaseManager.setFileName(textField.getText());
+            DataBaseManager.setFileName(textField.getText().trim());
             DataBaseManager.selectTablesNames();
         });
         // chose from combo
@@ -59,8 +66,7 @@ public class SQLiteViewer extends JFrame {
             queryArea.setText("SELECT * FROM " + chosenTable + ";");
         });
         // Execute button
-
-
+        executeButton.addActionListener(e -> jTable.setModel(DataBaseManager.fillJTable(queryArea.getText())));
     }
 
     public static void fillCombo() {
