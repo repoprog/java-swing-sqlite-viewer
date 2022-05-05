@@ -1,17 +1,19 @@
 package viewer;
 
 
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataBaseManager {
-    private static String fileName; //  D:\\database\\test.db
+    private static String dataBase; //= " D:\\database\\test.db";
     private static List<String> comboElements;
 
-    public static void setFileName(String fileName) {
-        DataBaseManager.fileName = fileName;
+    public static void setDataBase(String fileName) {
+        DataBaseManager.dataBase = fileName;
     }
 
     public static List<String> getComboElements() {
@@ -21,7 +23,7 @@ public class DataBaseManager {
     public static void selectTablesNames() {
         comboElements = new ArrayList<>();
         String selectTablesSQL = "SELECT name FROM sqlite_master WHERE type = ? AND name NOT LIKE ?";
-        try (Connection con = DriverManager.getConnection("jdbc:sqlite:" + fileName);
+        try (Connection con = DriverManager.getConnection("jdbc:sqlite:" + dataBase);
              PreparedStatement selectTables = con.prepareStatement(selectTablesSQL)) {
             selectTables.setString(1, "table");
             selectTables.setString(2, "sqlite_" + "%");
@@ -29,15 +31,15 @@ public class DataBaseManager {
             while (rs.next()) {
                 comboElements.add(rs.getString(1));
             }
-            System.out.println(String.join(", ", comboElements));
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(new Frame(), "Wrong SQL query.");
         }
         SQLiteViewer.fillCombo();
     }
 
     public static DefaultTableModel fillJTable(String query) {
-        try (Connection con = DriverManager.getConnection("jdbc:sqlite:" + fileName);
+        try (Connection con = DriverManager.getConnection("jdbc:sqlite:" + dataBase);
              Statement stat = con.createStatement()) {
             ResultSet rs = stat.executeQuery(query);
 

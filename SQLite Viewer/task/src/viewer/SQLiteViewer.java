@@ -6,7 +6,9 @@ import java.io.File;
 
 public class SQLiteViewer extends JFrame {
     private static JComboBox tablesCombo;
-    private String chosenTable;
+    private static JButton executeButton;
+    private static JTextArea queryTextArea;
+
     public SQLiteViewer() {
         super("SQLite Viewer");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -36,20 +38,22 @@ public class SQLiteViewer extends JFrame {
         tablesCombo.setBounds(50, 60, 600, 30);
         add(tablesCombo);
 
-        JTextArea queryArea = new JTextArea();
-        queryArea.setName("QueryTextArea");
-        queryArea.setBounds(50, 100, 470, 80);
-        add(queryArea);
+        queryTextArea = new JTextArea();
+        queryTextArea.setName("QueryTextArea");
+        queryTextArea.setBounds(50, 100, 470, 80);
+        queryTextArea.setEnabled(false);
+        add(queryTextArea);
 
-        JButton executeButton = new JButton("Execute");
+        executeButton = new JButton("Execute");
         executeButton.setName("ExecuteQueryButton");
         executeButton.setBounds(530, 100, 120, 35);
+        executeButton.setEnabled(false);
         add(executeButton);
 
         JTable jTable = new JTable();
         jTable.setName("Table");
         JScrollPane jTablePane = new JScrollPane(jTable); //Remember about JScrollPane to set table visible!
-        jTablePane.setBounds(50, 195,600, 300);
+        jTablePane.setBounds(50, 195, 600, 300);
         jTablePane.setVisible(true);
         add(jTablePane);
 
@@ -57,22 +61,37 @@ public class SQLiteViewer extends JFrame {
         // open button
         openButton.addActionListener(e -> {
             tablesCombo.removeAllItems();
-            DataBaseManager.setFileName(textField.getText().trim());
-            DataBaseManager.selectTablesNames();
+            String fileName = textField.getText().trim();
+
+            if (new File(fileName).exists()) {
+                enableJComponents(true);
+                DataBaseManager.setDataBase(fileName);
+                DataBaseManager.selectTablesNames();
+            } else {
+                JOptionPane.showMessageDialog(new Frame(), "Wrong file name!");
+                enableJComponents(false);
+            }
         });
+
         // chose from combo
-        tablesCombo.addActionListener(e -> {
-            chosenTable = (String) tablesCombo.getSelectedItem();
-            queryArea.setText("SELECT * FROM " + chosenTable + ";");
-        });
+        tablesCombo.addActionListener(e ->
+                queryTextArea.setText("SELECT * FROM " + tablesCombo.getSelectedItem() + ";"));
+
         // Execute button
-        executeButton.addActionListener(e -> jTable.setModel(DataBaseManager.fillJTable(queryArea.getText())));
+        executeButton.addActionListener(e ->
+                jTable.setModel(DataBaseManager.fillJTable(queryTextArea.getText())));
+
     }
 
     public static void fillCombo() {
         for (String table : DataBaseManager.getComboElements()) {
             tablesCombo.addItem(table);
         }
-
     }
+
+    public static void enableJComponents(Boolean flag) {
+        executeButton.setEnabled(flag);
+        queryTextArea.setEnabled(flag);
+    }
+
 }
